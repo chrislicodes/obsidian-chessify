@@ -65,17 +65,22 @@ export const displayMoveInHistory = (
 			if (typeof variantMoves[moveIndex + offset] !== 'undefined') {
 				moveToDisplay = variantMoves[moveIndex + offset];
 			}
+
+			if (typeof moveToDisplay === 'undefined') {
+				moveToDisplay = moves[variant.parentMoveIndex + offset];
+			}
 		} else {
 			if (typeof moves[moveIndex + offset] !== 'undefined') {
 				moveToDisplay = moves[moveIndex + offset];
 			}
 		}
+	} else if (offset < 0) {
+	  moveToDisplay = draft.study.moves[draft.study.moves.length - 1];
+	} else if (offset > 0) {
+	  moveToDisplay = draft.study.moves[0];
+	}
 
-		if (!moveToDisplay) {
-			console.log(`No move to display found`);
-			return draft;
-		}
-
+	if (moveToDisplay) {
 		const chess = new Chess(moveToDisplay.after);
 
 		chessView.set({
@@ -92,6 +97,26 @@ export const displayMoveInHistory = (
 		draft.currentMove = moveToDisplay;
 
 		setChessLogic(chess);
+	} else if (offset !== 0){
+		const chess = draft.study.root.fen ? new Chess(draft.study.root.fen) : new Chess();
+
+		chessView.set({
+		  fen: chess.fen(),
+			check: chess.isCheck(),
+			movable: {
+				free: false,
+				color: toColor(chess),
+				dests: toDests(chess),
+			},
+			turnColor: toColor(chess),
+		});
+
+		draft.currentMove = null;
+
+		setChessLogic(chess);
+	} else {
+		console.log(`No move to display found`);
+		return draft;
 	}
 
 	return draft;
